@@ -1,8 +1,10 @@
-# MMM-Traffic
+# MMM-TrafficRoute
 
 ![module screenshot](screenshots/04-multiple.png)
 
-This a module for the [MagicMirror](https://github.com/MichMich/MagicMirror/tree/develop). It displays travel time between two locations, using the Mapbox directions API to factor in current traffic conditions.
+This a module for the [MagicMirror](https://github.com/MagicMirrorOrg/MagicMirror). It displays travel time between two locations, using the Mapbox directions API to factor in current traffic conditions.
+
+Forked from the [MMM-Traffic](https://github.com/saml-dev/MMM-Traffic) module by Sam Lewis.
 
 # Table of Contents
 
@@ -28,8 +30,8 @@ This a module for the [MagicMirror](https://github.com/MichMich/MagicMirror/tree
 Navigate into your MagicMirror's `modules` folder and execute these commands:
 
 ```shell
-git clone https://github.com/SamLewis0602/MMM-Traffic.git
-cd MMM-Traffic
+git clone https://github.com/ardentras/MMM-TrafficRoute.git
+cd MMM-TrafficRoute
 npm install
 ```
 
@@ -40,7 +42,7 @@ npm install
 
 ## Styling
 
-You can use a global `MagicMirror/css/custom.css` file to customize the styles for each line of MMM-Traffic separately. Each line has its own class that should be used to apply styles:
+You can use a global `MagicMirror/css/custom.css` file to customize the styles for each line of MMM-TrafficRoute separately. Each line has its own class that should be used to apply styles:
   - `.mmmtraffic-firstline`
   - `.mmmtraffic-secondline`
 
@@ -108,7 +110,7 @@ in firstLine/secondLine._
 ### Per Day/Time Customization
 
 Using these options to hide the module when you're not using it will save API calls,
-allowing you to have a shorter interval or more MMM-Traffic modules without getting
+allowing you to have a shorter interval or more MMM-TrafficRoute modules without getting
 rate limited.
 
 | Option       | Description                                                              | Type       | Default                 |
@@ -123,7 +125,7 @@ rate limited.
 
 ```js
 {
-	module: "MMM-Traffic",
+	module: "MMM-TrafficRoute",
 	position: "top_left",
 	config: {
 		accessToken: "your_key_here",
@@ -139,7 +141,7 @@ rate limited.
 
 ```js
 {
-	module: "MMM-Traffic",
+	module: "MMM-TrafficRoute",
 	position: "top_left",
 	config: {
 		accessToken: "your_key_here",
@@ -157,7 +159,7 @@ rate limited.
 
 ```js
 {
-	module: "MMM-Traffic",
+	module: "MMM-TrafficRoute",
 	position: "top_left",
 	config: {
 		accessToken: "your_key_here",
@@ -174,7 +176,7 @@ rate limited.
 
 ```js
 {
-	module: "MMM-Traffic",
+	module: "MMM-TrafficRoute",
 	position: "top_left",
 	config: {
 		accessToken: "your_key_here",
@@ -191,7 +193,7 @@ rate limited.
 
 ```js
 {
-	module: "MMM-Traffic",
+	module: "MMM-TrafficRoute",
 	position: "top_left",
 	config: {
 		accessToken: "your_key_here",
@@ -209,7 +211,7 @@ rate limited.
 
 ```js
 {
-	module: "MMM-Traffic",
+	module: "MMM-TrafficRoute",
 	position: "top_left",
 	config: {
 		accessToken: "your_key_here",
@@ -220,7 +222,7 @@ rate limited.
 	}
 },
 {
-	module: "MMM-Traffic",
+	module: "MMM-TrafficRoute",
 	position: "top_left",
 	config: {
 		accessToken: "your_key_here",
@@ -242,7 +244,7 @@ be completely hidden on weekends.
 
 ```js
 {
-	module: "MMM-Traffic",
+	module: "MMM-TrafficRoute",
 	position: "top_left",
 	config: {
 		accessToken: "your_key_here",
@@ -256,7 +258,7 @@ be completely hidden on weekends.
 	}
 },
 {
-	module: "MMM-Traffic",
+	module: "MMM-TrafficRoute",
 	position: "top_left",
 	config: {
 		accessToken: "your_key_here",
@@ -283,6 +285,6 @@ be completely hidden on weekends.
 
 ## Legacy
 
-If you want to continue using the old version with Google Maps and more customization, use the [1.0-not-supported](https://github.com/SamLewis0602/MMM-Traffic/tree/1.0-not-supported) branch.
+If you want to continue using the old version with Google Maps and more customization, use the [1.0-not-supported](https://github.com/ardentras/MMM-TrafficRoute/tree/1.0-not-supported) branch.
 
 <b>NOTE</b>: this version is no longer supported, please do not open issues on the repo if you run into issues with this version.

@@ -1,11 +1,10 @@
-/* Magic Mirror
- * Module: MMM-Traffic
+/* MagicMirror² Module: MMM-TrafficRoute
  *
- * By Sam Lewis https://github.com/SamLewis0602
- * MIT Licensed.
+ * By Shaun Rasmusen https://github.com/ardentras
+ * MIT License.
  */
 
-Module.register('MMM-Traffic', {
+Module.register('MMM-TrafficRoute', {
   defaults: {
     interval: 300000,
     showSymbol: true,
@@ -27,7 +26,6 @@ Module.register('MMM-Traffic', {
     this.errorMessage = undefined;
     this.errorDescription = undefined;
     this.updateCommute = this.updateCommute.bind(this);
-    this.getCommute = this.getCommute.bind(this);
     this.getDom = this.getDom.bind(this);
     if (
       [
@@ -46,30 +44,16 @@ Module.register('MMM-Traffic', {
   },
 
   updateCommute: function () {
-    let mode =
-      this.config.mode == 'driving' ? 'driving-traffic' : this.config.mode;
-
-    // Build coordinates string with optional waypoints
-    let coordinates = this.config.originCoords;
-    if (this.config.waypoints && this.config.waypoints.length > 0) {
-      coordinates += ';' + this.config.waypoints.join(';');
-    }
-    coordinates += ';' + this.config.destinationCoords;
-
-    this.url = encodeURI(
-      `https://api.mapbox.com/directions/v5/mapbox/${mode}/${coordinates}?access_token=${this.config.accessToken}`,
-    );
-
     // only run getDom once at the start of a hidden period to remove the module from the screen, then just wait until time to unhide to run again
     if (this.shouldHide() && !this.internalHidden) {
       console.log(
-        'Hiding MMM-Traffic due to config options: days, hoursStart, hoursEnd',
+        'Hiding MMM-TrafficRoute due to config options: days, hoursStart, hoursEnd',
       );
       this.internalHidden = true;
       this.updateDom();
     } else if (!this.shouldHide()) {
       this.internalHidden = false;
-      this.getCommute(this.url);
+      this.sendSocketNotification("UPDATE-COMMUTE", this.config);
     }
     // no network requests are made when the module is hidden, so check every 30 seconds during hidden
     // period to see if it's time to unhide yet
@@ -79,34 +63,22 @@ Module.register('MMM-Traffic', {
     );
   },
 
-  getCommute: function (api_url) {
-    var self = this;
-    fetch(api_url)
-      .then((res) => {
-        if (!res.ok) {
-          return res.json().then((json) => {
-            throw new Error(
-              json.message || `API Error - ${res.status} ${res.statusText}`,
-            );
-          });
-        }
-        return res.json();
-      })
-      .then((json) => {
-        self.duration = Math.round(json.routes[0].duration / 60);
-        self.hours = Math.floor(self.duration / 60);
-        self.leftoverMinutes = self.duration % 60;
-        self.route = json.routes[0].legs[0].summary;
-        self.errorMessage = self.errorDescription = undefined;
-        self.loading = false;
-        self.updateDom();
-      })
-      .catch((e) => {
-        self.errorMessage = 'Error fetching commute';
-        self.errorDescription = e.message;
-        self.loading = false;
-        self.updateDom();
-      });
+  socketNotificationReceived: function (notification, payload) {
+    // check to see if the response was for us and used the same coordinates
+    if (notification === "UPDATE-COMMUTE-COMPLETE"
+      && payload.originCoords === this.config.originCoords
+      && payload.destinationCoords === this.config.destinationCoords
+    ) {
+      // we got some data so set the flag, stash the data to display then request the dom update
+      this.loaded = payload.loaded;
+      this.duration = payload.duration;
+      this.hours = payload.hours;
+      this.leftoverMinutes = payload.leftoverMinutes;
+      this.route = payload.route;
+      this.errorMessage = payload.errorMessage;
+      this.loading = false;
+      this.updateDom();
+    }
   },
 
   getStyles: function () {
@@ -125,9 +97,9 @@ Module.register('MMM-Traffic', {
 
     // base divs
     var firstLineDiv = document.createElement('div');
-    firstLineDiv.className = 'bright medium mmmtraffic-firstline';
+    firstLineDiv.className = 'bright medium mmmtrafficroute-firstline';
     var secondLineDiv = document.createElement('div');
-    secondLineDiv.className = 'normal small mmmtraffic-secondline';
+    secondLineDiv.className = 'normal small mmmtrafficroute-secondline';
 
     // display any errors
     if (this.errorMessage) {
