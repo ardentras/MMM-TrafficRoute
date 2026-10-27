@@ -84,6 +84,15 @@ module.exports = NodeHelper.create({
 
     const staticMapUrl = helpers.buildStaticMapUrl(payload, linestring);
 
+    if (staticMapUrl.length > 8192) {
+      const errMessage = 'Static Map request exceeded limit of 8192 characters' 
+      Log.log(errMessage);
+      this.sendSocketNotification("UPDATE-STATIC-MAP-COMPLETE", {
+        errorMessage: 'Error fetching commute',
+        errorDescription: errMessage
+      })
+    }
+
     this.getStaticMap(staticMapUrl, payload);
   },
 
