@@ -64,21 +64,21 @@ module.exports = NodeHelper.create({
       coordinates: geometryCoordinates
     };
     lineWidth = payload.map?.lineWidth ?? 3;
+    lineColor = payload.map?.lineColor ?? "#fff";
     const geoJSONElement = {
       "type": "FeatureCollection",
-
       "features": [
         {
           "type": "Feature",
           "properties": {
-            "stroke": "rgb(255, 255, 255)",
+            "stroke": lineColor,
             "stroke-width": lineWidth
           },
           "geometry": linestringElement
         }
       ]
     };
-    let debugstring = JSON.stringify(simplify_geo(geoJSONElement, 0.0001).features[0].geometry);
+    let debugstring = JSON.stringify(simplify_geo(geoJSONElement, 0.0001));
     Log.log(debugstring);
     linestring = encodeURIComponent(debugstring);
 
