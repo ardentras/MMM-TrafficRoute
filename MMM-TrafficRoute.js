@@ -57,27 +57,35 @@ Module.register('MMM-TrafficRoute', {
     }
     // no network requests are made when the module is hidden, so check every 30 seconds during hidden
     // period to see if it's time to unhide yet
-    setTimeout(
-      this.updateCommute,
-      this.internalHidden ? 3000 : this.config.interval,
-    );
+    // setTimeout(
+    //   this.updateCommute,
+    //   this.internalHidden ? 3000 : this.config.interval,
+    // );
   },
 
   socketNotificationReceived: function (notification, payload) {
     // check to see if the response was for us and used the same coordinates
-    if (notification === "UPDATE-COMMUTE-COMPLETE"
-      && payload.originCoords === this.config.originCoords
-      && payload.destinationCoords === this.config.destinationCoords
-    ) {
-      // we got some data so set the flag, stash the data to display then request the dom update
-      this.loaded = payload.loaded;
-      this.duration = payload.duration;
-      this.hours = payload.hours;
-      this.leftoverMinutes = payload.leftoverMinutes;
-      this.route = payload.route;
-      this.errorMessage = payload.errorMessage;
-      this.loading = false;
-      this.updateDom();
+    if (payload.originCoords === this.config.originCoords
+      && payload.destinationCoords === this.config.destinationCoords) {
+      if (notification === "UPDATE-COMMUTE-COMPLETE") {
+        // we got some data so set the flag, stash the data to display then request the dom update
+        this.loaded = payload.loaded;
+        this.duration = payload.duration;
+        this.hours = payload.hours;
+        this.leftoverMinutes = payload.leftoverMinutes;
+        this.route = payload.route;
+        this.errorMessage = payload.errorMessage;
+        this.loading = false;
+        this.updateDom();
+
+        this.sendSocketNotification("UPDATE-STATIC-MAP", {
+          ...this.config,
+          polyline: payload.polyline
+        });
+      } else if (notification === "UPDATE-STATIC-MAP-COMPLETE") {
+        this.staticMapImage = payload.mapImage;
+        this.updateDom();
+      }
     }
   },
 
@@ -134,6 +142,16 @@ Module.register('MMM-TrafficRoute', {
     if (this.config.secondLine) {
       secondLineDiv.innerHTML = this.replaceTokens(this.config.secondLine);
       wrapper.appendChild(secondLineDiv);
+    }
+
+    if (this.staticMapImage) {
+      const img = document.createElement('img');
+
+      img.src = this.staticMapImage;
+      img.height = 400;
+      img.width = 400;
+
+      wrapper.appendChild(img);
     }
 
     return wrapper;

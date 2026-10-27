@@ -21,7 +21,9 @@
   },
   "homepage": "https://github.com/ardentras/MMM-TrafficRoute#readme",
   "dependencies": {
+    "mime-types": "^3.0.2",
     "moment": "^2.27.0",
-    "node-fetch": "^2.6.1"
+    "node-fetch": "^2.6.1",
+    "simplify-geojson": "^1.0.5"
   }
 }
