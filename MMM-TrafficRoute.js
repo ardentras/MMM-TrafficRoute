@@ -57,10 +57,10 @@ Module.register('MMM-TrafficRoute', {
     }
     // no network requests are made when the module is hidden, so check every 30 seconds during hidden
     // period to see if it's time to unhide yet
-    // setTimeout(
-    //   this.updateCommute,
-    //   this.internalHidden ? 3000 : this.config.interval,
-    // );
+    setTimeout(
+      this.updateCommute,
+      this.internalHidden ? 3000 : this.config.interval,
+    );
   },
 
   socketNotificationReceived: function (notification, payload) {
@@ -80,7 +80,9 @@ Module.register('MMM-TrafficRoute', {
 
         this.sendSocketNotification("UPDATE-STATIC-MAP", {
           ...this.config,
-          polyline: payload.polyline
+          polyline: payload.polyline,
+          congestion: payload.congestion,
+          rawLengthCongestion: payload.rawLengthCongestion
         });
       } else if (notification === "UPDATE-STATIC-MAP-COMPLETE") {
         this.staticMapImage = payload.mapImage;

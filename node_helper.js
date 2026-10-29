@@ -32,16 +32,25 @@ module.exports = NodeHelper.create({
         return res.json();
       })
       .then((json) => {
-        let duration = Math.round(json.routes[0].duration / 60);
+        const duration = Math.round(json.routes[0].duration / 60);
+        let allCongestion = [];
+        json.routes[0].legs.forEach((leg) => {
+          allCongestion = allCongestion.concat(leg.annotation.congestion)
+        });
+        const congestion = helpers.encodeCongestion(allCongestion);
+
         this.sendSocketNotification("UPDATE-COMMUTE-COMPLETE", {
           originCoords: this.originCoords,
           destinationCoords: this.destinationCoords,
           loaded: true,
-          duration: duration,
+          duration,
           hours: Math.floor(duration / 60),
           leftoverMinutes: duration % 60,
           route: json.routes[0].legs[0].summary,
-          polyline: json.routes[0].geometry
+          polyline: json.routes[0].geometry,
+          congestion,
+          rawLengthCongestion: allCongestion.length,
+          closures: json.routes[0].legs[0].closures ?? null
         });
       })
       .catch((e) => {
@@ -70,22 +79,74 @@ module.exports = NodeHelper.create({
       "features": [
         {
           "type": "Feature",
-          "properties": {
-            "stroke": lineColor,
-            "stroke-width": lineWidth
-          },
           "geometry": linestringElement
         }
       ]
     };
-    let debugstring = JSON.stringify(simplify_geo(geoJSONElement, 0.0001));
-    Log.log(debugstring);
-    linestring = encodeURIComponent(debugstring);
+    let simplegeo = simplify_geo(geoJSONElement, 0.0001).features[0].geometry.coordinates;
+    let severities = helpers.calculateSeverities(
+      payload.congestion,
+      payload.rawLengthCongestion,
+      geometryCoordinates,
+      simplegeo
+    );
+
+    let simplegeoJSONElement = {
+      "type": "FeatureCollection",
+      "features": [
+      ]
+    }
+
+    const levelColors = {
+      unknown: '#fff',
+      low: '#6a3',
+      moderate: '#a93',
+      heavy: '#a63',
+      severe: '#a33'
+    }
+
+    let lastLevel = severities[0].level;
+    let feature = {
+      "type": "Feature",
+      "properties": {
+        "stroke": levelColors[lastLevel],
+        "stroke-width": 3
+      },
+      "geometry": {
+        type: "LineString",
+        coordinates: []
+      }
+    }
+    for (i in simplegeo) {
+      let level = severities[i].level
+      if (level !== lastLevel) {
+        simplegeoJSONElement.features.push(feature);
+        feature = {
+          "type": "Feature",
+          "properties": {
+            "stroke": levelColors[level],
+            "stroke-width": 3
+          },
+          "geometry": {
+            type: "LineString",
+            coordinates: [feature.geometry.coordinates[feature.geometry.coordinates.length - 1]]
+          }
+        }
+      }
+
+      feature.geometry.coordinates.push(simplegeo[i]);
+      lastLevel = level
+    }
+    simplegeoJSONElement.features.push(feature);
+
+    Log.log(JSON.stringify(simplegeoJSONElement));
+
+    linestring = encodeURIComponent(JSON.stringify(simplegeoJSONElement));
 
     const staticMapUrl = helpers.buildStaticMapUrl(payload, linestring);
 
     if (staticMapUrl.length > 8192) {
-      const errMessage = 'Static Map request exceeded limit of 8192 characters' 
+      const errMessage = 'Static Map request exceeded limit of 8192 characters'
       Log.log(errMessage);
       this.sendSocketNotification("UPDATE-STATIC-MAP-COMPLETE", {
         errorMessage: 'Error fetching commute',
@@ -99,9 +160,7 @@ module.exports = NodeHelper.create({
   getStaticMap: function (api_url) {
     fetch(api_url)
       .then((res) => {
-        Log.log('request complete!');
         if (!res.ok) {
-          Log.log('request failed!');
           return res.arrayBuffer().then((json) => {
             Log.log("ERROR: " + `API Error - ${res.status} ${res.statusText}`)
             throw new Error(
@@ -110,7 +169,6 @@ module.exports = NodeHelper.create({
           });
         }
 
-        Log.log('request succeeded!');
         return res.arrayBuffer();
       })
       .then((buffer) => {

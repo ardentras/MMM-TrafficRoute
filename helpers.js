@@ -79,8 +79,77 @@ function buildCoordinates(config) {
   return coordinates;
 }
 
+function encodeCongestion(congestion) {
+  let count = 1;
+  let curr = last = null;
+  let encoded = [];
+  for (elem of congestion) {
+    if (curr === null) {
+      curr = elem;
+    } else {
+      last = curr;
+      curr = elem;
+    }
+
+    if (last === curr) {
+      count++;
+    } else if (last !== null) {
+      encoded.push({ level: last, count });
+      count = 1;
+    }
+  }
+  encoded.push({ level: last, count });
+
+  return encoded;
+}
+
+function calculateSeverities(congest, rawLengthCongestion, geo, simplegeo) {
+  let sgIdxs = []
+  simplegeo.forEach((val) => {
+    sgIdxs.push(geo.findIndex((elem) => {
+      return Math.round(elem[0] * 100000) === Math.round(val[0] * 100000)
+        && Math.round(elem[1] * 100000) === Math.round(val[1] * 100000)
+    }))
+  })
+
+  let segSev = [];
+  let sevIdx = 0;
+  let sevSum = congest[sevIdx].count;
+  let sgIdx = 0;
+  let sevs = [sevIdx];
+  const sevRanking = {
+    unknown: 0,
+    low: 1,
+    moderate: 2,
+    heavy: 3,
+    severe: 4
+  }
+
+  for (sgIdx = 0; sgIdx < sgIdxs.length;) {
+    if (sgIdxs[sgIdx] < sevSum || sevSum == rawLengthCongestion) {
+      let sevMax = 0;
+      for (i in sevs) {
+        idxLevel = sevRanking[congest[i].level];
+        if (idxLevel > sevMax)
+          sevMax = idxLevel;
+      }
+      segSev.push({ index: sgIdxs[sgIdx], level: Object.keys(sevRanking)[sevMax] });
+      sgIdx++;
+      sevs = [sevIdx];
+    } else {
+      sevIdx++;
+      sevSum += congest[sevIdx]?.count ?? 0;
+      sevs.push(sevIdx);
+    }
+  }
+
+  return segSev;
+}
+
 module.exports = {
   buildDirectionsUrl,
   buildStaticMapUrl,
-  decodePolyline
+  decodePolyline,
+  encodeCongestion,
+  calculateSeverities
 }
