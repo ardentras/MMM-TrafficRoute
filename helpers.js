@@ -16,7 +16,7 @@ function decodePolyline(polyline, precision = 5) {
   return h;
 }
 
-function buildDirectionsUrl(config, waypoints) {
+function buildDirectionsUrl(config) {
   const baseUrl = 'baseUrl' in config ? config.baseUrl : 'https://api.mapbox.com';
   const basePath = '/directions/v5/mapbox';
   const modePath = parseMode(config);
@@ -25,11 +25,14 @@ function buildDirectionsUrl(config, waypoints) {
     'access_token=' + config.accessToken
   ];
   if ('annotations' in config) {
-    args.push('annotations=' + config.annotations);
+    args.push('annotations=' + config.annotations.join(','));
     args.push('overview=full');
   }
   if ('steps' in config) {
     args.push('steps=' + config.steps);
+  }
+  if ('exclude' in config) {
+    args.push('exclude=' + config.exclude.join(','));
   }
 
   return new url.URL(
